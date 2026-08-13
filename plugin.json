@@ -1,0 +1,17 @@
+{
+  "name": "biometric",
+  "permissions": {
+    "android": ["android.permission.USE_BIOMETRIC"],
+    "ios": {
+      "NSFaceIDUsageDescription": "Used to verify your identity with Face ID."
+    }
+  },
+  "nativeDependencies": {
+    "android": {
+      "gradle": "androidx.biometric:biometric:1.1.0"
+    }
+  },
+  "methods": ["isAvailable", "authenticate"],
+  "hooks": [],
+  "events": []
+}
