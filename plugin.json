@@ -8,7 +8,7 @@
   },
   "nativeDependencies": {
     "android": {
-      "gradle": "androidx.biometric:biometric:1.1.0"
+      "gradle": ["androidx.biometric:biometric:1.1.0"]
     }
   },
   "methods": ["isAvailable", "authenticate"],
