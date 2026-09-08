@@ -1,119 +1,92 @@
 # @wefterjs/biometric
 
-Official Wefter plugin for native biometric authentication (Face ID, Touch ID, Android BiometricPrompt).
-
----
+Official Wefter plugin for native biometric authentication on Android (BiometricPrompt) and iOS (LocalAuthentication).
 
 ## Features
 
-- 🔒 **Native Security**: Uses Android `androidx.biometric.BiometricPrompt` & iOS `LocalAuthentication` (`LAContext`).
-- 👆 **Multi-Biometry**: Supports Fingerprint, Face ID, Touch ID, and Iris authentication.
-- 🔑 **Device Passcode Fallback**: Optional OS passcode fallback if biometrics are not configured or fail.
-- ⚡ **Zero Reflection**: Routes direct to Kotlin/Swift dispatchers with `invokeNative`.
+- Check hardware presence and user enrollment for Face ID, Touch ID, or Optic ID.
+- Display native OS authentication dialogs with configurable titles and cancel buttons.
+- Support optional fallback to device PIN, pattern, or passcode credentials.
+- Configurable authentication timeout protection.
 
----
+## Installation and setup
 
-## Installation & Setup
-
-1. Add the plugin to your Wefter project:
+Install the plugin package in your Wefter application:
 
 ```bash
 wefter add @wefterjs/biometric
-```
-
-2. Synchronize native projects:
-
-```bash
 wefter sync
 ```
 
----
+### Native permissions and dependencies
 
-## Native Permissions & Manifest Configuration
+When synchronized:
 
-- **Android** (`AndroidManifest.xml`): Automatically requests `<uses-permission android:name="android.permission.USE_BIOMETRIC" />`.
-- **iOS** (`Info.plist`): Automatically injects `NSFaceIDUsageDescription`.
+- Android automatically receives the `android.permission.USE_BIOMETRIC` permission and the `androidx.biometric:biometric:1.1.0` Gradle dependency.
+- iOS automatically configures the `NSFaceIDUsageDescription` key in `Info.plist`.
 
----
+## JavaScript API reference
 
-## JavaScript API Reference
-
-Import `invokeNative` from `@wefterjs/core`:
+Import `Biometric` from `@wefterjs/biometric`:
 
 ```ts
-import { invokeNative } from "@wefterjs/core";
+import { Biometric } from "@wefterjs/biometric";
 ```
 
-### 1. `isAvailable()`
+### Check biometric availability
 
-Checks if biometric hardware is present, enrolled, and ready for authentication on the device.
+Verify if biometric authentication hardware exists, is enrolled, and is currently available:
 
 ```ts
-interface BiometricAvailability {
-  available: boolean;
-  biometryType: "face" | "touch" | "iris" | "none";
-  error?: string;
-}
-
-const status = await invokeNative<BiometricAvailability>("biometric", "isAvailable");
+const status = await Biometric.isAvailable({
+  allowDeviceCredential: true, // Allow device PIN or passcode as alternative
+});
 
 if (status.available) {
-  console.log(`Biometrics supported: ${status.biometryType}`);
+  console.log("Supported biometry type:", status.biometryType);
+  // "touchId", "faceId", "opticId", or "none"
 } else {
-  console.log(`Biometrics unavailable: ${status.error}`);
+  console.log("Biometrics unavailable:", status.message, status.code);
 }
 ```
 
-### 2. `authenticate(options)`
+### Authenticate user
 
-Triggers the OS native biometric prompt dialog.
+Prompt the user to authenticate using biometric sensors:
 
 ```ts
-interface AuthenticateOptions {
-  reason?: string; // Display prompt reason (e.g. "Confirm your identity to unlock funds")
-  fallbackTitle?: string; // Custom button label for OS passcode fallback
-  allowDeviceCredential?: boolean; // Allow PIN / Pattern / Passcode fallback
-}
-
-interface AuthenticateResult {
-  success: boolean;
-  error?: string;
-}
-
 try {
-  const result = await invokeNative<AuthenticateResult>("biometric", "authenticate", {
-    reason: "Authenticate to access your secure wallet",
-    fallbackTitle: "Use Device PIN",
+  const result = await Biometric.authenticate({
+    title: "Verify your identity",
+    subtitle: "Confirm biometric credentials to access your account",
+    cancelText: "Cancel",
     allowDeviceCredential: true,
+    timeoutMs: 30000,
   });
 
   if (result.success) {
-    console.log("Authentication successful!");
+    console.log("Authentication confirmed");
   }
 } catch (error) {
-  console.error("Biometric prompt cancelled or failed:", error);
+  console.error("Authentication cancelled or failed:", error);
 }
 ```
 
----
+The call resolves with `{ success: true }` upon successful identity confirmation. If the user cancels the prompt, fails too many attempts, or times out, the returned Promise rejects with a `WefterBridgeError`.
 
-## Complete Usage Example
+## Platform implementation notes
 
-```ts
-import { invokeNative } from "@wefterjs/core";
+### Android
 
-export async function unlockApp(): Promise<boolean> {
-  const status = await invokeNative<{ available: boolean }>("biometric", "isAvailable");
+- Uses `androidx.biometric.BiometricPrompt` with `BiometricManager.Authenticators.BIOMETRIC_STRONG`.
+- When `allowDeviceCredential` is true, adds `BIOMETRIC_WEAK` and `DEVICE_CREDENTIAL` flags to allow pattern, PIN, or password unlock.
 
-  if (!status.available) {
-    alert("Biometric hardware is not configured on this device.");
-    return false;
-  }
+### iOS
 
-  const response = await invokeNative<{ success: boolean }>("biometric", "authenticate", {
-    reason: "Log into your account",
-  });
+- Uses Apple's `LocalAuthentication` framework (`LAContext`).
+- Validates policy using `deviceOwnerAuthenticationWithBiometrics` or `deviceOwnerAuthentication` based on the `allowDeviceCredential` option.
+- Queries `biometryType` on `LAContext` to distinguish between Touch ID, Face ID, and Optic ID.
 
-  return response.success;
-}
-```
+## License
+
+[MIT](LICENSE) © 2026 Sandip Ghimire
