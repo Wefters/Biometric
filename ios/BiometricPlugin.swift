@@ -1,8 +1,11 @@
 import Foundation
 import LocalAuthentication
 
+/// Biometric authentication with the LocalAuthentication framework.
 final class BiometricPlugin: WefterPlugin {
 
+    /// Whether biometrics (or, with `allowDeviceCredential`, the passcode) can be used, and which sensor the
+    /// device has. Reasons for unavailability are reported in the result rather than as an error.
     // @WefterMethod
     func isAvailable(payload: [String: Any], callback: @escaping (Result<Any, Error>) -> Void) throws {
         let allowDeviceCredential = payload["allowDeviceCredential"] as? Bool ?? false
@@ -24,6 +27,7 @@ final class BiometricPlugin: WefterPlugin {
         ])
     }
 
+    /// Shows the Face ID / Touch ID prompt. Rejects when the user cancels or authentication fails.
     // @WefterMethod
     func authenticate(payload: [String: Any], callback: @escaping (Result<Any, Error>) -> Void) throws {
         let title = payload["title"] as? String
@@ -58,6 +62,7 @@ final class BiometricPlugin: WefterPlugin {
         }
     }
 
+    /// JavaScript name of a biometry type.
     private static func biometryTypeName(_ type: LABiometryType) -> String {
         switch type {
         case .faceID: return "faceId"
@@ -67,6 +72,7 @@ final class BiometricPlugin: WefterPlugin {
         }
     }
 
+    /// Error code and message explaining why authentication is unavailable.
     private static func describeUnavailable(_ error: NSError?) -> (code: String, message: String) {
         guard let laError = error as? LAError else {
             return ("UNAVAILABLE", "Biometric authentication is not available on this device.")
@@ -86,6 +92,7 @@ final class BiometricPlugin: WefterPlugin {
         }
     }
 
+    /// Error code and message for a failed or cancelled authentication.
     private static func describeFailure(_ error: Error?) -> (code: String, message: String) {
         guard let laError = error as? LAError else {
             return ("AUTH_ERROR", error?.localizedDescription ?? "Biometric authentication failed.")

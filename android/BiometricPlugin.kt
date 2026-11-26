@@ -10,12 +10,17 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import org.json.JSONObject
 
+/** Biometric authentication with AndroidX `BiometricPrompt`. */
 class BiometricPlugin(context: Context, dispatcher: BridgeDispatcher) :
         WefterPlugin(context, dispatcher) {
 
         private val activity: FragmentActivity
                 get() = context as FragmentActivity
 
+        /**
+         * Whether biometrics (or, with `allowDeviceCredential`, the screen lock) can be used. Reasons for
+         * unavailability are reported in the result rather than as an error.
+         */
         @WefterMethod
         fun isAvailable(payload: JSONObject, callback: (Result<Any>) -> Unit) {
                 val allowDeviceCredential = payload.optBoolean("allowDeviceCredential", false)
@@ -38,6 +43,10 @@ class BiometricPlugin(context: Context, dispatcher: BridgeDispatcher) :
                 )
         }
 
+        /**
+         * Shows the system biometric prompt. Rejects when the user cancels or authentication fails; a single
+         * unrecognised attempt lets the user try again.
+         */
         @WefterMethod
         fun authenticate(payload: JSONObject, callback: (Result<Any>) -> Unit) {
                 val title = payload.optString("title", "Authenticate")
@@ -125,6 +134,7 @@ class BiometricPlugin(context: Context, dispatcher: BridgeDispatcher) :
                 }
         }
 
+        /** The authenticator types to allow. */
         private fun authenticatorsFor(allowDeviceCredential: Boolean): Int =
                 if (allowDeviceCredential) {
                         BIOMETRIC_STRONG or BIOMETRIC_WEAK or DEVICE_CREDENTIAL
@@ -132,6 +142,7 @@ class BiometricPlugin(context: Context, dispatcher: BridgeDispatcher) :
                         BIOMETRIC_STRONG or BIOMETRIC_WEAK
                 }
 
+        /** Error code and message explaining why authentication is unavailable. */
         private fun describeUnavailable(availability: Int): Pair<String, String> =
                 when (availability) {
                         BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ->
