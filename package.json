@@ -9,6 +9,7 @@
     "plugin.json",
     "android",
     "ios",
+    "i18n",
     "README.md"
   ],
   "publishConfig": {

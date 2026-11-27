@@ -32,7 +32,7 @@ final class BiometricPlugin: WefterPlugin {
     func authenticate(payload: [String: Any], callback: @escaping (Result<Any, Error>) -> Void) throws {
         let title = payload["title"] as? String
         let subtitle = payload["subtitle"] as? String
-        let reason = subtitle ?? title ?? "Authenticate to continue"
+        let reason = subtitle ?? title ?? WefterText.get("biometric.reason")
         let allowDeviceCredential = payload["allowDeviceCredential"] as? Bool ?? false
 
         let context = LAContext()
