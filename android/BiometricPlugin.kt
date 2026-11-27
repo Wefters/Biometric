@@ -49,9 +49,9 @@ class BiometricPlugin(context: Context, dispatcher: BridgeDispatcher) :
          */
         @WefterMethod
         fun authenticate(payload: JSONObject, callback: (Result<Any>) -> Unit) {
-                val title = payload.optString("title", "Authenticate")
+                val title = payload.optString("title").ifBlank { WefterText.get(context, "biometric.title") }
                 val subtitle = payload.optString("subtitle", "").takeIf { it.isNotBlank() }
-                val cancelText = payload.optString("cancelText", "Cancel")
+                val cancelText = payload.optString("cancelText").ifBlank { WefterText.get(context, "dialog.cancel") }
                 val allowDeviceCredential = payload.optBoolean("allowDeviceCredential", false)
                 val authenticators = authenticatorsFor(allowDeviceCredential)
 

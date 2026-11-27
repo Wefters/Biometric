@@ -74,6 +74,10 @@ try {
 
 The call resolves with `{ success: true }` upon successful identity confirmation. If the user cancels the prompt, fails too many attempts, or times out, the returned Promise rejects with a `WefterBridgeError`.
 
+## Text
+
+Without a `title` (Android) or reason (iOS), the prompt shows `biometric.title` / `biometric.reason` in the user's language; without `cancelText`, the shell's Cancel (`dialog.cancel`).
+
 ## Platform implementation notes
 
 ### Android
